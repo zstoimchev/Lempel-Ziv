@@ -16,23 +16,4 @@ public final class BitUtils {
         }
         return sb.toString();
     }
-
-    public static byte[] toByteArray(String bits) {
-        if (bits == null || bits.isEmpty()) return new byte[0];
-        if (bits.length() % 8 != 0) {
-            throw new IllegalArgumentException("Bit string length must be a multiple of 8, got: " + bits.length());
-        }
-
-        byte[] result = new byte[bits.length() / 8];
-        for (int i = 0; i < result.length; i++) {
-            String byteStr = bits.substring(i * 8, i * 8 + 8);
-            result[i] = (byte) Integer.parseInt(byteStr, 2);
-        }
-        return result;
-    }
-
-    public static int packedByteSize(String bitString) {
-        if (bitString == null || bitString.isEmpty()) return 0;
-        return (int) Math.ceil(bitString.length() / 8.0);
-    }
 }

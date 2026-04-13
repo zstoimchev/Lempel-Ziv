@@ -1,5 +1,7 @@
 package dev;
 
+import dev.utils.Logger;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,42 +10,45 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        if (args.length < 2) printUsage();
+//        if (args.length < 2) printUsage();
 
-        String command = args[0].toLowerCase();
-        Path inputPath = Path.of(args[1]);
+//        String command = args[0].toLowerCase();
+//        Path inputPath = Path.of(args[1]);
+        String command = "compress".toLowerCase();
+        Path inputPath = Path.of("book.pdf");
 
         if (!Files.exists(inputPath)) {
-            System.err.println("[ERROR] File not found: " + inputPath);
+            Logger.critical("File not found: " + inputPath);
             System.exit(1);
         }
 
         switch (command) {
             case "compress" -> runCompress(inputPath);
-            case "info" -> runInfo(inputPath);
+//            case "info" -> runInfo(inputPath);
             default -> printUsage();
         }
     }
 
     private static void runCompress(Path path) {
-        System.out.println("[*] Reading file: " + path.toAbsolutePath());
+        Logger.info("Reading file: " + path.toAbsolutePath());
 
         byte[] rawBytes;
         try {
             rawBytes = Files.readAllBytes(path);
         } catch (IOException e) {
-            System.err.println("[ERROR] Could not read file: " + e.getMessage());
+            Logger.critical("Could not read file: " + e.getMessage());
             System.exit(1);
             return;
         }
 
-        System.out.printf("[*] File size    : %,d bytes%n", rawBytes.length);
-        System.out.println("[*] Converting to bit string...");
+        Logger.info("File read successfully, starting compression...");
+        Logger.info("Converting " + rawBytes.length + " bytes to bit string");
 
         String bitString = BitUtils.toBitString(rawBytes);
         System.out.printf("[*] Bit string   : %,d characters%n", bitString.length());
+        Logger.info("Bit string: " + bitString.length() + " characters");
 
-        System.out.println("[*] Compressing with LZ...");
+        Logger.info("Compressing with LZ...");
         long startMs = System.currentTimeMillis();
 
         LZCompressor compressor = new LZCompressor();
@@ -51,7 +56,6 @@ public class Main {
 
         long elapsedMs = System.currentTimeMillis() - startMs;
 
-        // dictionary size = 256 initial + tokens added
         int dictSize = 256 + tokens.size();
         long estimatedBytes = LZCompressor.estimatedCompressedBytes(tokens, dictSize);
 
@@ -59,6 +63,7 @@ public class Main {
         stats.printReport();
     }
 
+    /*
     private static void runInfo(Path path) {
         System.out.println("[*] File info for: " + path.getFileName());
         try {
@@ -76,17 +81,17 @@ public class Main {
                 System.out.printf("    %-8s %,d bytes%n", ext, bytes)
         );
     }
+*/
 
     private static void printUsage() {
-        System.out.println("""
-                Usage:
-                  java -jar lempel-ziv.jar compress <file>   Compress a file and print stats
-                  java -jar lempel-ziv.jar info     <file>   Print file size comparison only
+        Logger.info("""
+                  Usage:
+                    java -jar lempel-ziv.jar compress <file>   Compress a file and print stats
+                    java -jar lempel-ziv.jar info     <file>   Print file size comparison only
                 
-                Example:
-                  java -jar lempel-ziv.jar compress book.pdf
+                  Example:
+                    java -jar lempel-ziv.jar compress book.pdf
                 """);
         System.exit(1);
-        return;
     }
 }
