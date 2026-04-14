@@ -5,17 +5,20 @@ import dev.utils.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) {
-//        if (args.length < 2) printUsage();
+        if (args.length < 2) printUsage();
 
-//        String command = args[0].toLowerCase();
-//        Path inputPath = Path.of(args[1]);
         String command = "compress".toLowerCase();
         Path inputPath = Path.of("book.pdf");
+        if (args.length == 2) {
+            command = args[0].toLowerCase();
+            inputPath = Path.of(args[1]);
+        }
 
         if (!Files.exists(inputPath)) {
             Logger.critical("File not found: " + inputPath);
@@ -42,17 +45,16 @@ public class Main {
         }
 
         Logger.info("File read successfully, starting compression...");
-        Logger.info("Converting " + rawBytes.length + " bytes to bit string");
-
-        String bitString = BitUtils.toBitString(rawBytes);
-        System.out.printf("[*] Bit string   : %,d characters%n", bitString.length());
-        Logger.info("Bit string: " + bitString.length() + " characters");
+        Logger.info("Creating ISO-8859-1 string view of " + rawBytes.length + " bytes (one char per byte)");
+        String inputString = new String(rawBytes, StandardCharsets.ISO_8859_1);
+        System.out.printf("[*] Input string : %,d characters%n", inputString.length());
+        Logger.info("Input string length: " + inputString.length() + " characters");
 
         Logger.info("Compressing with LZ...");
         long startMs = System.currentTimeMillis();
 
         LZCompressor compressor = new LZCompressor();
-        List<LZEntry> tokens = compressor.compress(bitString);
+        List<LZEntry> tokens = compressor.compress(inputString);
 
         long elapsedMs = System.currentTimeMillis() - startMs;
 
@@ -84,7 +86,7 @@ public class Main {
 */
 
     private static void printUsage() {
-        Logger.info("""
+        System.out.println("""
                   Usage:
                     java -jar lempel-ziv.jar compress <file>   Compress a file and print stats
                     java -jar lempel-ziv.jar info     <file>   Print file size comparison only
